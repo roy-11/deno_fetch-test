@@ -1,9 +1,12 @@
 // @see "https://deno.land/std@0.86.0/log"
 import * as log from 'https://deno.land/std/log/mod.ts';
+import * as _ from "https://deno.land/x/lodash@4.17.15-es/lodash.js"
 
 interface Launch {
   flightNumber: number;
   mission: string;
+  rocket: string;
+  customers: string[]
 }
 const launches = new Map<number,Launch>();
 
@@ -23,7 +26,7 @@ await log.setup({
 // @see "https://github.com/r-spacex/SpaceX-API"
 async function downloadLaunchData(){
   log.info("Downloading launch data...")
-  const response = await fetch("https://api.spacexdata.com/v4/launches",{
+  const response = await fetch("https://api.spacexdata.com/v3/launches",{
     method:"GET"
   })
 
@@ -34,9 +37,15 @@ async function downloadLaunchData(){
 
   const launchData = await response.json()
   for(const launch of launchData){
+    const payloads = launch["rocket"]["second_stage"]["payloads"]
+    const customers = _.flatMap(payloads,(payload: any)=>{
+      return payload["customers"]
+    })
     const flightData = {
       flightNumber: launch["flight_number"],
-      mission: launch["name"]
+      mission: launch["mission_name"],
+      rocket: launch["rocket"]["rocket_name"],
+      customers
     }
 
     launches.set(flightData.flightNumber, flightData)
