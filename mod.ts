@@ -24,14 +24,14 @@ await log.setup({
 });
 
 // @see "https://github.com/r-spacex/SpaceX-API"
-async function downloadLaunchData(){
-  log.info("Downloading launch data...")
+export async function downloadLaunchData(){
+  if(import.meta.main) log.info("Downloading launch data...")
   const response = await fetch("https://api.spacexdata.com/v3/launches",{
     method:"GET"
   })
 
   if(!response.ok){
-    log.warning("Problem downloading launch data.")
+    if(import.meta.main) log.warning("Problem downloading launch data.")
     throw new Error("Launch data download failed.")
   }
 
@@ -49,8 +49,12 @@ async function downloadLaunchData(){
     }
 
     launches.set(flightData.flightNumber, flightData)
-    log.info(JSON.stringify(flightData))
+    if(import.meta.main) log.info(JSON.stringify(flightData))
   }
 }
 
-downloadLaunchData();
+if(import.meta.main){
+  downloadLaunchData();
+  log.info(JSON.stringify(import.meta))
+  log.info(`Downloaded data for ${launches.size} SpaceX launched`)
+}
