@@ -1,6 +1,12 @@
 // @see "https://deno.land/std@0.86.0/log"
 import * as log from 'https://deno.land/std/log/mod.ts';
 
+interface Launch {
+  flightNumber: number;
+  mission: string;
+}
+const launches = new Map<number,Launch>();
+
 // logger setting
 await log.setup({
   handlers: {
@@ -8,7 +14,7 @@ await log.setup({
   },
   loggers: {
     default: {
-      level: "WARNING",
+      level: "DEBUG",
       handlers: ["console"],
     },
   },
@@ -17,7 +23,7 @@ await log.setup({
 // @see "https://github.com/r-spacex/SpaceX-API"
 async function downloadLaunchData(){
   log.info("Downloading launch data...")
-  const response = await fetch("https://api.spacexdata.com/v4/launches/latest",{
+  const response = await fetch("https://api.spacexdata.com/v4/launches",{
     method:"GET"
   })
 
@@ -26,8 +32,16 @@ async function downloadLaunchData(){
     throw new Error("Launch data download failed.")
   }
 
-  const data = await response.json()
-  console.log(data)
+  const launchData = await response.json()
+  for(const launch of launchData){
+    const flightData = {
+      flightNumber: launch["flight_number"],
+      mission: launch["name"]
+    }
+
+    launches.set(flightData.flightNumber, flightData)
+    log.info(JSON.stringify(flightData))
+  }
 }
 
 downloadLaunchData();
